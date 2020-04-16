@@ -5,6 +5,7 @@ import numpy as np
 import math
 from utils.geometry import rot6d_to_rotmat
 
+
 class Bottleneck(nn.Module):
     """ Redefinition of Bottleneck residual block
         Adapted from the official PyTorch implementation
@@ -45,6 +46,7 @@ class Bottleneck(nn.Module):
         out = self.relu(out)
 
         return out
+
 
 class HMR(nn.Module):
     """ SMPL Iterative Regressor with ResNet50 backbone
@@ -91,7 +93,6 @@ class HMR(nn.Module):
         self.register_buffer('init_shape', init_shape)
         self.register_buffer('init_cam', init_cam)
 
-
     def _make_layer(self, block, planes, blocks, stride=1):
         downsample = None
         if stride != 1 or self.inplanes != planes * block.expansion:
@@ -108,7 +109,6 @@ class HMR(nn.Module):
             layers.append(block(self.inplanes, planes))
 
         return nn.Sequential(*layers)
-
 
     def forward(self, x, init_pose=None, init_shape=None, init_cam=None, n_iter=3):
 
@@ -138,7 +138,7 @@ class HMR(nn.Module):
         pred_shape = init_shape
         pred_cam = init_cam
         for i in range(n_iter):
-            xc = torch.cat([xf, pred_pose, pred_shape, pred_cam],1)
+            xc = torch.cat([xf, pred_pose, pred_shape, pred_cam], 1)
             xc = self.fc1(xc)
             xc = self.drop1(xc)
             xc = self.fc2(xc)
@@ -146,19 +146,19 @@ class HMR(nn.Module):
             pred_pose = self.decpose(xc) + pred_pose
             pred_shape = self.decshape(xc) + pred_shape
             pred_cam = self.deccam(xc) + pred_cam
-        
+
         pred_rotmat = rot6d_to_rotmat(pred_pose).view(batch_size, 24, 3, 3)
 
         return pred_rotmat, pred_shape, pred_cam
+
 
 def hmr(smpl_mean_params, pretrained=True, **kwargs):
     """ Constructs an HMR model with ResNet50 backbone.
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
     """
-    model = HMR(Bottleneck, [3, 4, 6, 3],  smpl_mean_params, **kwargs)
+    model = HMR(Bottleneck, [3, 4, 6, 3], smpl_mean_params, **kwargs)
     if pretrained:
         resnet_imagenet = resnet.resnet50(pretrained=True)
-        model.load_state_dict(resnet_imagenet.state_dict(),strict=False)
+        model.load_state_dict(resnet_imagenet.state_dict(), strict=False)
     return model
-

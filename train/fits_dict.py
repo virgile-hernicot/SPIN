@@ -7,6 +7,7 @@ from torchgeometry import angle_axis_to_rotation_matrix
 import config
 import constants
 
+
 class FitsDict():
     """ Dictionary keeping track of the best fit per image in the training set """
     def __init__(self, options, train_dataset):
